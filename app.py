@@ -21,11 +21,6 @@ def create_tables():
 
 create_tables()
 
-@app.route('/users')
-def show_users():
-    # 모든 사용자 데이터 가져오기
-    users = User.query.all()
-    return render_template('users.html', users=users)
 
 # 홈 페이지
 @app.route('/')
@@ -46,7 +41,9 @@ def signup():
         password = request.form['password']
 
         # 패스워드 해시화
-        hashed_password = generate_password_hash(password, method='sha256')
+      
+        password = "your_password"
+        hashed_password = generate_password_hash(password)
 
         # 새로운 사용자 객체 생성
         new_user = User(username=username, email=email, password=hashed_password)
@@ -73,6 +70,42 @@ def login():
             return "Invalid login credentials", 401  # 로그인 실패 시 오류 메시지 표시
 
     return render_template('login.html')
+
+
+@app.route('/admin')
+def admin():
+    # 모든 사용자 데이터 가져오기
+    users = User.query.all()
+    return render_template('admin.html', users=users)
+
+# 사용자 정보 수정
+@app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)  # 해당 사용자 ID로 조회
+
+    if request.method == 'POST':
+        # 폼 데이터를 가져와 사용자 정보 업데이트
+        user.username = request.form['username']
+        user.email = request.form['email']
+
+        # 패스워드 업데이트 (빈 값이 아닐 때만)
+        new_password = request.form['password']
+        if new_password:
+            user.password = generate_password_hash(new_password)
+
+        db.session.commit()  # 변경사항 저장
+        return redirect('/admin')  # 관리자 페이지로 리다이렉트
+
+    return render_template('edit_user.html', user=user)
+
+# 사용자 삭제
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)  # 해당 사용자 ID로 조회
+    db.session.delete(user)
+    db.session.commit()  # 삭제 저장
+    return redirect('/admin')  # 관리자 페이지로 리다이렉트
+
 
 # 파일 서빙
 @app.route('/<path:filename>')
