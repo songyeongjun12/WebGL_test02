@@ -21,6 +21,14 @@ def create_tables():
 
 create_tables()
 
+import os
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # 기본값 5000
+    app.run(host="0.0.0.0", port=port)
+
+
+
 
 # 홈 페이지
 @app.route('/')
